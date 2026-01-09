@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QEthing – Conundrum Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0e1020;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 32px;
+      box-sizing: border-box;
+    }
+
+    .game {
+      width: 880px;
+      max-height: calc(100vh - 64px);
+      background: #151735;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    /* ---------- TITLE ---------- */
+    .questionWrap {
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .question {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0;
+      opacity: 0;
+      transform: scale(0.88);
+    }
+
+    .question.show {
+      opacity: 1;
+      animation: titlePop 1100ms ease forwards;
+    }
+
+    @keyframes titlePop {
+      0%   { transform: scale(0.88); }
+      55%  { transform: scale(1.18); }
+      100% { transform: scale(1.0); }
+    }
+
+    .sub {
+      color: #9aa3ff;
+      font-size: 12px;
+      margin-top: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 800ms ease, transform 800ms ease;
+    }
+
+    .sub.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---------- CLUES ---------- */
+    .clues {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .clueImg {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      background: #0b0d22;
+      border-radius: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 400ms ease, transform 450ms ease;
+    }
+
+    .clueImg.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---------- ANSWER + TIMER LAYOUT ---------- */
+    .answerArea {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 6px;
+    }
+
+    .answerRows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tilesRow {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ---------- TILE: instant green + single pulse ---------- */
+    .tile {
+      position: relative;
+      width: 44px;
+      height: 52px;
+      border-radius: 8px;
+      border: 2px solid #23266b;
+      background: #0b0d22;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 26px;
+      font-weight: bold;
+      overflow: hidden;
+      transition: background-color 60ms linear, border-color 60ms linear;
+    }
+
+    .tile span {
+      color: #0b0d22;
+    }
+
+    .tile.revealed {
+      background: #7cffc8;
+      border-color: #7cffc8;
+      animation: tilePulse 220ms ease-out;
+    }
+
+    @keyframes tilePulse {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.26); }
+      100% { transform: scale(1); }
+    }
+
+    .tile.final {
+      background: #ff4d5e;
+      border-color: #ff4d5e;
+    }
+
+    .tile.final span {
+      color: #ffffff;
+    }
+
+    /* ---------- TIMER RING ---------- */
+    .timerWrap {
+      width: 86px;
+      height: 86px;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transform: translateX(6px);
+      transition: opacity 300ms ease, transform 300ms ease;
+    }
+
+    .timerWrap.on {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .ring {
+      width: 86px;
+      height: 86px;
+      transform: rotate(-90deg); /* start at 12 o'clock */
+    }
+
+    .ringTrack {
+      fill: none;
+      stroke: rgba(255,255,255,0.12);
+      stroke-width: 10;
+    }
+
+    .ringProgress {
+      fill: none;
+      stroke: #ff4d5e;
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 9999;
+      stroke-dashoffset: 9999;
+      transition: stroke-dashoffset 140ms linear;
+    }
+
+    .timerLabel {
+      position: absolute;
+      font-size: 11px;
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      width: 86px;
+      margin-top: 98px;
+    }
+
+    /* ---------- INPUT ---------- */
+    .answer {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    input {
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      width: 300px;
+    }
+
+    button {
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #7cffc8;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .status {
+      text-align: center;
+      color: #9aa3ff;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    /* ---------- CONFETTI ---------- */
+    #confettiCanvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    #confettiCanvas.on {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="game" id="gameCard">
+  <canvas id="confettiCanvas"></canvas>
+
+  <h1>Conundrum</h1>
+
+  <div class="questionWrap">
+    <div id="question" class="question">What 2025 movie is this?</div>
+    <div id="sub" class="sub">Watch the clues… then race the tiles.</div>
+  </div>
+
+  <div class="clues">
+    <img id="clue1" class="clueImg" src="images/clue1.png">
+    <img id="clue2" class="clueImg" src="images/clue2.jpg">
+    <img id="clue3" class="clueImg" src="images/clue3.png">
+  </div>
+
+  <!-- Answer + Timer -->
+  <div class="answerArea">
+    <div class="answerRows" id="answerRows"></div>
+
+    <div class="timerWrap" id="timerWrap" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 100 100">
+        <circle class="ringTrack" cx="50" cy="50" r="38"></circle>
+        <circle class="ringProgress" id="ringProgress" cx="50" cy="50" r="38"></circle>
+      </svg>
+      <div class="timerLabel">TIME</div>
+    </div>
+  </div>
+
+  <div class="answer">
+    <input id="guess" placeholder="Type your answer…" />
+    <button onclick="submitAnswer()">Submit</button>
+  </div>
+
+  <div class="status" id="status">Round starting…</div>
+</div>
+
+<script>
+  const answer = "MARTY SUPREME";
+
+  /* ---- TIMING ---- */
+  const preTitlePauseMs = 900;
+  const postTitlePauseMs = 1500;
+  const beatMs = 1650;
+
+  // ✅ more time between all clues visible and tiles starting
+  const pauseAfterCluesMs = 3200;
+
+  const endFlashDelayMs = 450;
+
+  const revealOrder = [0,6,1,11,2,10,3,9,4,8,7,12];
+
+  let revealedCount = 0;
+  let finished = false;
+  let loopId = null;
+
+  const questionEl = document.getElementById("question");
+  const subEl = document.getElementById("sub");
+  const answerRowsEl = document.getElementById("answerRows");
+  const statusEl = document.getElementById("status");
+  const guessInput = document.getElementById("guess");
+
+  /* Timer ring */
+  const timerWrap = document.getElementById("timerWrap");
+  const ring = document.getElementById("ringProgress");
+  const R = 38;
+  const C = 2 * Math.PI * R;
+  ring.style.strokeDasharray = `${C}`;
+  ring.style.strokeDashoffset = `${C}`; // 0% filled
+
+  function setRingProgress(p01) {
+    const clamped = Math.max(0, Math.min(1, p01));
+    ring.style.strokeDashoffset = `${C * (1 - clamped)}`;
+  }
+
+  guessInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") submitAnswer();
+  });
+
+  /* ---- BUILD TILES ---- */
+  const tiles = [];
+  answer.split(" ").forEach(word => {
+    const row = document.createElement("div");
+    row.className = "tilesRow";
+    [...word].forEach(() => {
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      const span = document.createElement("span");
+      tile.appendChild(span);
+      row.appendChild(tile);
+      tiles.push({ tile, span });
+    });
+    answerRowsEl.appendChild(row);
+  });
+
+  const indexMap = [];
+  let t = 0;
+  for (let i = 0; i < answer.length; i++) {
+    if (answer[i] !== " ") indexMap[i] = t++;
+  }
+
+  setTimeout(() => {
+    questionEl.classList.add("show");
+    subEl.classList.add("show");
+  }, preTitlePauseMs);
+
+  const clueEls = [
+    document.getElementById("clue1"),
+    document.getElementById("clue2"),
+    document.getElementById("clue3")
+  ];
+
+  const clueStartMs = preTitlePauseMs + postTitlePauseMs;
+  clueEls.forEach((el, i) => {
+    setTimeout(() => el.classList.add("revealed"), clueStartMs + i * beatMs);
+  });
+
+  const tilesStartMs = clueStartMs + (2 * beatMs) + pauseAfterCluesMs;
+
+  // When tiles start, we turn on the ring and start filling it as letters appear
+  setTimeout(() => {
+    timerWrap.classList.add("on");
+    setRingProgress(0);
+
+    loopId = setInterval(() => {
+      if (finished) return;
+
+      if (revealedCount < revealOrder.length) {
+        const i = revealOrder[revealedCount];
+        const obj = tiles[indexMap[i]];
+        obj.span.textContent = answer[i];
+        obj.tile.classList.add("revealed");
+        revealedCount++;
+
+        // progress based on letters revealed
+        setRingProgress(revealedCount / revealOrder.length);
+      } else {
+        // ensure ring ends full
+        setRingProgress(1);
+        setTimeout(() => end(false), endFlashDelayMs);
+        clearInterval(loopId);
+      }
+    }, beatMs);
+  }, tilesStartMs);
+
+  function revealAllLetters() {
+    for (let i = 0; i < answer.length; i++) {
+      if (answer[i] === " ") continue;
+      const obj = tiles[indexMap[i]];
+      obj.span.textContent = answer[i];
+      obj.tile.classList.add("revealed");
+    }
+    revealedCount = revealOrder.length;
+    setRingProgress(1);
+    timerWrap.classList.add("on");
+  }
+
+  function submitAnswer() {
+    if (finished) return;
+    if (guessInput.value.trim().toUpperCase() === answer) {
+      revealAllLetters();
+      statusEl.textContent = "Correct! 🎉";
+      setTimeout(() => end(true), endFlashDelayMs);
+    } else {
+      statusEl.textContent = "Not quite… keep guessing!";
+    }
+  }
+
+  function end(won) {
+    if (finished) return;
+    finished = true;
+    if (loopId) clearInterval(loopId);
+
+    revealAllLetters();
+    tiles.forEach(o => o.tile.classList.add("final"));
+    statusEl.textContent = won ? "Answered early — maximum points!" : "Time’s up!";
+
+    launchConfetti();
+  }
+
+  /* ---- CONFETTI ---- */
+  const CONFETTI_COLORS = ["#7cffc8","#ff4d5e","#ffd166","#4cc9f0","#b388ff","#ff8fab"];
+  const canvas = document.getElementById("confettiCanvas");
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    const r = gameCard.getBoundingClientRect();
+    canvas.width = r.width * devicePixelRatio;
+    canvas.height = r.height * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  function launchConfetti() {
+    canvas.classList.add("on");
+    resizeCanvas();
+    const W = gameCard.clientWidth;
+    const H = gameCard.clientHeight;
+
+    const pieces = Array.from({length:140}, () => ({
+      x: Math.random()*W,
+      y: -20,
+      w: 6+Math.random()*6,
+      h: 8+Math.random()*10,
+      vx:(Math.random()-0.5)*2.4,
+      vy:2.2+Math.random()*3.2,
+      r:Math.random()*Math.PI,
+      vr:(Math.random()-0.5)*0.25,
+      life:0,
+      max:140+Math.random()*60,
+      color: CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]
+    }));
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+      pieces.forEach(p=>{
+        p.life++;
+        p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle=p.color;
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        ctx.restore();
+      });
+      if(pieces.every(p=>p.life>p.max||p.y>H+60)) {
+        ctx.clearRect(0,0,W,H);
+        canvas.classList.remove("on");
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+</script>
+
+</body>
+</html>
