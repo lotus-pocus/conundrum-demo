@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QEthing – Conundrum Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <div class="game" id="gameCard">
+    <canvas id="confettiCanvas"></canvas>
+
+    <h1>Conundrum</h1>
+
+    <div class="questionWrap">
+      <div id="question" class="question">What 2025 movie is this?</div>
+      <div id="sub" class="sub">Watch the clues… then race the tiles.</div>
+    </div>
+
+    <div class="clues">
+      <img id="clue1" class="clueImg" src="images/clue1.png" alt="Clue 1">
+      <img id="clue2" class="clueImg" src="images/clue2.jpg" alt="Clue 2">
+      <img id="clue3" class="clueImg" src="images/clue3.png" alt="Clue 3">
+    </div>
+
+    <div class="answerArea">
+      <div class="answerRows" id="answerRows"></div>
+
+      <div class="timerWrap" id="timerWrap" aria-hidden="true">
+        <svg class="ring" viewBox="0 0 100 100">
+          <circle class="ringTrack" cx="50" cy="50" r="38"></circle>
+          <circle class="ringProgress" id="ringProgress" cx="50" cy="50" r="38"></circle>
+        </svg>
+        <div class="timerLabel">TIME</div>
+      </div>
+    </div>
+
+    <div class="answer">
+      <input id="guess" placeholder="Type your answer…" />
+      <button id="submitBtn" type="button">Submit</button>
+    </div>
+
+    <div class="status" id="status">Round starting…</div>
+  </div>
+
+  <!-- Order matters -->
+  <script src="js/config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/rounds.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
